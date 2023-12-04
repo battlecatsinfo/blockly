@@ -25,30 +25,36 @@ class App {
         javascript.javascriptGenerator.addReservedWords('code');
         javascript.javascriptGenerator.addReservedWords('CCC');
         javascript.javascriptGenerator.addReservedWords('iter_f');
+        javascript.javascriptGenerator.addReservedWords('my_curve');
+        javascript.javascriptGenerator.addReservedWords('plus_lv');
+        javascript.javascriptGenerator.addReservedWords('def_lv');
+        javascript.javascriptGenerator.addReservedWords('_curves');
     }
     addGenerators() {
         javascript.javascriptGenerator.forBlock['set_sort_expr'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             var statements_s = generator.statementToCode(block, 's');
-            var value_v = generator.valueToCode(block, 'v', javascript.Order.ATOMIC);
+            var value_v = generator.valueToCode(block, 'v', javascript.Order.ATOMIC) || '1';
             return `{let f=iter_f;${statements_s};sort_result=${value_v};}`;
         };
         javascript.javascriptGenerator.forBlock['set_filter_expr'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             var statements_s = generator.statementToCode(block, 's');
-            var value_v = generator.valueToCode(block, 'v', javascript.Order.ATOMIC);
+            var value_v = generator.valueToCode(block, 'v', javascript.Order.ATOMIC) || '1';
             return `{let f = iter_f;${statements_s};filter_result=${value_v};}`;
         };
-        javascript.javascriptGenerator.forBlock['with_enemy'] = function (block: Blockly.Block, generator: Blockly.Generator) {
+        /*javascript.javascriptGenerator.forBlock['with_enemy'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             var statements_s = generator.statementToCode(block, 's');
             var value_v = generator.valueToCode(block, 'v', javascript.Order.ATOMIC);
             return `{let e = ${value_v};${statements_s};}`;
-        };
+        };*/
         javascript.javascriptGenerator.forBlock['with_cat'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             var statements_s = generator.statementToCode(block, 's');
             let n = block.getFieldValue('d');
-            if (n == '-1')
-                n = 'f.forms.length - 1';
             var value_v = generator.valueToCode(block, 'v', javascript.Order.MEMBER);
-            return `{let f = (${value_v}).forms[${n}];${statements_s};}`;
+            if (n == '-1')
+                n = value_v + '.forms.length - 1';
+            var base = generator.valueToCode(block, 'base', javascript.Order.ASSIGNMENT) || '50';
+            var plus = generator.valueToCode(block, 'plus', javascript.Order.ASSIGNMENT) || '0';
+            return `{let f = (${value_v}).forms[(${n})];my_curve = _curves[${value_v}.curve];_info = ${value_v}.info;def_lv = ${base};plus_lv = ${plus};${statements_s}}`;
         };
         javascript.javascriptGenerator.forBlock['cat_has_effect'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             const n = block.getFieldValue('d');
@@ -86,16 +92,17 @@ class App {
             const n = block.getFieldValue('d');
             if (n == '-1')
                 return ['f.pre1', javascript.Order.MEMBER];
-            return [`f.atktype == ` + n, javascript.Order.EQUALITY];
+            return [`f.atktype & ` + n, javascript.Order.BITWISE_AND];
         };
         javascript.javascriptGenerator.forBlock['get_cat'] = function (block: Blockly.Block, generator: Blockly.Generator) {
-            var n = generator.valueToCode(block, 'v', javascript.Order.NONE);
-            return [`await CCC.loadCat(${n})`, javascript.Order.AWAIT];
+            var n = generator.valueToCode(block, 'v', javascript.Order.NONE) || '0';
+            return [`CCC.cats.at(${n})`, javascript.Order.FUNCTION_CALL];
         };
+        /*
         javascript.javascriptGenerator.forBlock['get_enemy'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             var n = generator.valueToCode(block, 'v', javascript.Order.NONE);
-            return [`await CCC.loadEnemy(${n})`, javascript.Order.AWAIT];
-        };
+            return [`(${n})`, javascript.Order.AWAIT];
+        };*/
         javascript.javascriptGenerator.forBlock['cat_name'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             return ['f.name', javascript.Order.MEMBER];
         };
@@ -103,11 +110,12 @@ class App {
             return ['f.jp_name', javascript.Order.MEMBER];
         };
         javascript.javascriptGenerator.forBlock['get_all_cat'] = function (block: Blockly.Block, generator: Blockly.Generator) {
-            return ['await CCC.loadAllCats()', javascript.Order.AWAIT];
+            return ['CCC.cats', javascript.Order.ATOMIC];
         };
+        /*
         javascript.javascriptGenerator.forBlock['get_all_enemy'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             return ['await CCC.loadAllEnemies()', javascript.Order.AWAIT];
-        };
+        };*/
         javascript.javascriptGenerator.forBlock['cat_involve_constant'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             const n = block.getFieldValue('d');
             const t = block.getFieldValue('t');
@@ -115,15 +123,15 @@ class App {
         };
         javascript.javascriptGenerator.forBlock['cat_rarity'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             const n = block.getFieldValue('d');
-            return [`f.rarity == ` + n, javascript.Order.EQUALITY];
+            return [`_info.rarity == ` + n, javascript.Order.EQUALITY];
         };
         javascript.javascriptGenerator.forBlock['cat_has_trait'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             const n = block.getFieldValue('d');
-            return [`f.trait & ${n}`, javascript.Order.BITWISE_AND];
+            return [`Boolean(f.trait & ${n})`, javascript.Order.FUNCTION_CALL];
         };
         javascript.javascriptGenerator.forBlock['cat_has_trait_icon'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             const n = block.getFieldValue('d');
-            return [`f.trait & ${n}`, javascript.Order.BITWISE_AND];
+            return [`Boolean(f.trait & ${n})`, javascript.Order.FUNCTION_CALL];
         };
         javascript.javascriptGenerator.forBlock['cat_trait_constant'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             const n = block.getFieldValue('d');
@@ -141,15 +149,33 @@ class App {
             var n = generator.valueToCode(block, 'v', javascript.Order.NONE) || '[]';
             return `CCC.download(${n}, 'csv')`;
         };
+        javascript.javascriptGenerator.forBlock['output_tsv'] = function (block: Blockly.Block, generator: Blockly.Generator) {
+            var n = generator.valueToCode(block, 'v', javascript.Order.NONE) || '[]';
+            return `CCC.download(${n}, 'tsv')`;
+        };
         javascript.javascriptGenerator.forBlock['output_json'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             var n = generator.valueToCode(block, 'v', javascript.Order.NONE) || '{}';
             return `CCC.download(${n}, 'json')`;
+        };
+        javascript.javascriptGenerator.forBlock['cat_form_length'] = function (block: Blockly.Block, generator: Blockly.Generator) {
+            return ['CCC.cats[f.id].forms.length', javascript.Order.MEMBER];
+        };
+        javascript.javascriptGenerator.forBlock['cat_status'] = function (block: Blockly.Block, generator: Blockly.Generator) {
+            const n = block.getFieldValue('d');
+            var code;
+            switch (n) {
+                case '2': return ['CCC.cats[f.id].forms.length >= 2', javascript.Order.RELATIONAL];
+                case '3': return ['CCC.cats[f.id].forms.length >= 3', javascript.Order.RELATIONAL];
+                case '4': return ['CCC.cats[f.id].forms.length >= 4', javascript.Order.RELATIONAL];
+                case 'super': return ['CCC.isSuper(_info)', javascript.Order.FUNCTION_CALL];
+                case 'talent': return ['_info.hasOwnProperty("talents")', javascript.Order.FUNCTION_CALL] ;
+            }
         };
         javascript.javascriptGenerator.forBlock['output_chart'] = function (block: Blockly.Block, generator: Blockly.Generator) {
             var dropdown_chart = block.getFieldValue('chart');
             var text_title = block.getFieldValue('title') || '圖表';
             const variable0 = generator.getVariableName(block.getFieldValue('VAR'));
-            var value_xlabel = generator.valueToCode(block, 'xlabel', javascript.Order.NONE) || `CC.str(${variable0})`;
+            var value_xlabel = generator.valueToCode(block, 'xlabel', javascript.Order.NONE) || `CCC.str(${variable0})`;
             var value_y = generator.valueToCode(block, 'y', javascript.Order.NONE) || variable0;
             var argument0 = generator.valueToCode(block, 'FROM', javascript.Order.ASSIGNMENT) || '0';
             var argument1 = generator.valueToCode(block, 'TO', javascript.Order.ASSIGNMENT) || '10';
@@ -288,7 +314,7 @@ class App {
 
             }
         };
-        Blockly.Blocks['with_enemy'] = {
+        /*Blockly.Blocks['with_enemy'] = {
             init: function () {
                 this.appendValueInput("v")
                     .setCheck("Enemy")
@@ -301,14 +327,20 @@ class App {
                 this.setNextStatement(true, null);
 
             }
-        };
+        };*/
         Blockly.Blocks['with_cat'] = {
             init: function () {
                 this.appendValueInput("v")
                     .setCheck("Cat")
                     .appendField("綁定貓咪");
-                this.appendEndRowInput()
+                this.appendDummyInput()
                     .appendField(new Blockly.FieldDropdown([["第一型態", "0"], ["第二型態", "1"], ["第三型態", "2"], ["第四型態", "3"], ["最高型態", "-1"]]), "d");
+                this.appendValueInput('base')
+                    .appendField('基本等級')
+                    .setCheck('Number');
+                this.appendValueInput('plus')
+                    .appendField('加值等級')
+                    .setCheck('Number');
                 this.appendStatementInput("s")
                     .setCheck(null)
                     .appendField("執行");
@@ -433,7 +465,7 @@ class App {
             init: function () {
                 this.appendDummyInput()
                     .appendField('數值')
-                    .appendField(new Blockly.FieldDropdown([["ID", "id"], ["攻擊對象", "trait"], ["血量", "hp"], ["攻擊力", "atk"], ["攻擊力", "attack"], ["射程", "range"], ["攻擊頻率(秒)", "attacks"], ["攻擊頻率(F)", "attackf"], ["DPS", "dps"], ["KB", "kb"], ["再生產(秒)", "cd"], ["再生產(F)", "cdf"], ["會心一擊機率", "crit"], ["波動等級", "wavelv"], ["小波動等級", "miniwavelv"]]), "d");
+                    .appendField(new Blockly.FieldDropdown([["ID", "id"], ["攻擊對象", "trait"], ["血量", "hp"], ["攻擊力", "atk"], ["射程", "range"], ["攻擊頻率(秒)", "attacks"], ["攻擊頻率(F)", "attackf"], ["DPS", "dps"], ["KB", "kb"], ["再生產(秒)", "cd"], ["再生產(F)", "cdf"]]), "d");
                 this.setColour(230);
 
                 this.setOutput(true, 'Number');
@@ -444,9 +476,8 @@ class App {
             init: function () {
                 this.appendDummyInput()
                     .appendField('能力＆效果')
-                    .appendField(new Blockly.FieldDropdown([["ID", "id"], ["攻擊對象", "trait"], ["血量", "hp"], ["攻擊力", "atk"], ["攻擊力", "attack"], ["射程", "range"], ["攻擊頻率(秒)", "attacks"], ["攻擊頻率(F)", "attackf"], ["DPS", "dps"], ["KB", "kb"], ["再生產(秒)", "cd"], ["再生產(F)", "cdf"], ["會心一擊機率", "crit"], ["波動等級", "wavelv"], ["小波動等級", "miniwavelv"]]), "d");
+                    .appendField(new Blockly.FieldDropdown([["會心一擊機率","crit"], ["波動等級","wavelv"], ["小波動等級","miniwavelv"], ["烈波等級","volclv"], ["小烈波等級","minivolclv"], ["使動作變慢時間(無金寶、單位為F)","slow_time"], ["使動作變慢機率","slow_prob"], ["使動作停止時間(無金寶、單位為F)","stop_time"], ["使動作停止機率","stop_prob"], ["詛咒時間(無金寶、單位為F)","curse_time"], ["詛咒機率","curse_prob"], ["使攻擊力下降時間(無金寶、單位為F)","weak_time"], ["使攻擊力下降發動機率","weak_prob"], ["降低攻擊力幅度","weak_extent"], ["攻擊力上升幅度","strong_extent"], ["死前存活機率","lethal_prob"], ["渾身一擊程度","savage_extent"], ["渾身一擊機率","savage_prob"], ["破壞護盾機率","break_prob"], ["破壞惡魔盾機率","shield_break_prob\t"], ["發射小波動機率","mini_wave_prob"], ["發射波動機率","wave_prob"], ["發射小烈波機率","mini_surge_prob"], ["攻擊無效化時間(單位為F)","dodge_time"], ["攻擊無效化機率","dodge_prob\t"], ["超獸特效攻擊無效機率","beast_prob"], ["超獸特效攻擊無效時間(單位為F)","beast_time"], ["使動作停止的控場覆蓋率","stop_cover"], ["使動作變慢的控場覆蓋率","slow_cover"], ["攻擊力下降的控場覆蓋率","weak_cover"], ["詛咒的控場覆蓋率","curse_cover"]]), "d");
                 this.setColour(230);
-
                 this.setOutput(true, 'Number');
                 this.setInputsInline(true);
             }
@@ -504,6 +535,7 @@ class App {
 
             }
         };
+        /*
         Blockly.Blocks['get_enemy'] = {
             init: function () {
                 this.appendDummyInput().appendField('編號');
@@ -517,7 +549,7 @@ class App {
                 this.setColour(230);
 
             }
-        };
+        };*/
         Blockly.Blocks['cat_name'] = {
             init: function () {
                 this.appendDummyInput()
@@ -551,6 +583,7 @@ class App {
 
             }
         };
+        /*
         Blockly.Blocks['get_all_enemy'] = {
             init: function () {
                 this.appendDummyInput()
@@ -561,7 +594,7 @@ class App {
 
 
             }
-        };
+        };*/
         Blockly.Blocks['cat_involve_constant'] = {
             init: function () {
                 this.appendDummyInput()
@@ -582,22 +615,16 @@ class App {
                 this.appendDummyInput()
                     .appendField(new Blockly.FieldDropdown([["紅色敵人", "1"], ["飄浮敵人", "2"], ["黑色敵人", "4"], ["鋼鐵敵人", "8"], ["天使敵人", "16"], ["異星戰士", "32"], ["不死生物", "64"], ["無屬性敵人", "256"], ["古代種", "128"], ["惡魔", "2048"], ["超獸", "8192"], ["道場塔", "4096"], ["超生命體", "16384"], ["使徒", "512"], ["魔女", "1024"]]), "d");
                 this.setColour(230);
-
                 this.setOutput(true, 'Trait');
-
             }
         };
         Blockly.Blocks['cat_rarity'] = {
             init: function () {
-                this.appendValueInput("v")
-                    .setCheck("Number")
+                this.appendDummyInput()
                     .appendField("稀有度")
                     .appendField(new Blockly.FieldDropdown([["基本", "0"], ["EX", "1"], ["稀有", "2"], ["激稀有", "3"], ["超激稀有", "4"], ["傳說稀有", "5"]]), "d");
                 this.setColour(230);
-                this.setInputsInline(true);
                 this.setOutput(true, 'Boolean');
-
-
             }
         };
         Blockly.Blocks['cat_has_trait'] = {
@@ -620,8 +647,30 @@ class App {
                 this.setColour(230);
                 this.setInputsInline(true);
                 this.setOutput(true, 'Boolean');
-
-
+            }
+        };
+        Blockly.Blocks['cat_status'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldDropdown([
+                        ['開放第二型態', '2'],
+                        ['開放第三型態', '3'],
+                        ['開放第四型態', '4'],
+                        ['開放本能', 'talent'],
+                        ['開放超本能', 'super'],
+                    ]), "d");
+                this.setColour(230);
+                this.setInputsInline(true);
+                this.setOutput(true, 'Boolean');
+            }
+        };
+        Blockly.Blocks['cat_form_length'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField("貓咪的型態數");
+                this.setInputsInline(false);
+                this.setColour(230);
+                this.setOutput(true, 'Array');
             }
         };
         Blockly.Blocks['output_terminal'] = {
@@ -652,6 +701,18 @@ class App {
                 this.appendValueInput("v")
                     .setCheck('Array')
                     .appendField("下載CSV檔");
+                this.setColour(230);
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setTooltip("");
+                this.setHelpUrl("");
+            }
+        };
+        Blockly.Blocks['output_tsv'] = {
+            init: function () {
+                this.appendValueInput("v")
+                    .setCheck('Array')
+                    .appendField("下載TSV檔");
                 this.setColour(230);
                 this.setPreviousStatement(true, null);
                 this.setNextStatement(true, null);
@@ -709,29 +770,7 @@ class App {
         const workspace = Blockly.inject('blocklyDiv', {
             'toolbox': toolbox
         });
-        const codeDiv = document.getElementById('codeDiv') as HTMLElement;
-        const supportedEvents = new Set([
-            Blockly.Events.BLOCK_CHANGE,
-            Blockly.Events.BLOCK_CREATE,
-            Blockly.Events.BLOCK_DELETE,
-            Blockly.Events.BLOCK_MOVE,
-        ]);
-        function updateCode(event: Blockly.Events.Abstract) {
-            if (workspace.isDragging()) return;
-            if (!supportedEvents.has(event.type)) return;
-
-            let sort_result;
-            let filter_result;
-            const code = javascript.javascriptGenerator.workspaceToCode(workspace);
-            /*try {
-                eval(code);
-            } catch (e) {
-                alert(e);
-            }*/
-            codeDiv.textContent = code;
-        }
-        workspace.addChangeListener(updateCode);
-        document.getElementById('run').onclick = function () {
+        document.getElementById('runBlockly').onclick = function () {
             const code = javascript.javascriptGenerator.workspaceToCode(workspace);
             try {
                 eval(code);

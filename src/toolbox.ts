@@ -873,10 +873,10 @@ export default {
                     "kind": "block",
                     "type": "with_cat"
                 },
-                {
+                /*{
                     "kind": "block",
                     "type": "with_enemy"
-                },
+                },*/
                 {
                     "kind": "block",
                     "type": "set_filter_expr"
@@ -923,6 +923,14 @@ export default {
                 },
                 {
                     "kind": "block",
+                    "type": "cat_status"
+                },
+                {
+                    "kind": "block",
+                    "type": "cat_form_length"
+                },
+                {
+                    "kind": "block",
                     "type": "cat_trait_constant"
                 },
                 {
@@ -953,21 +961,21 @@ export default {
                     "kind": "block",
                     "type": "get_cat"
                 },
-                {
+                /*{
                     "kind": "block",
                     "type": "get_enemy"
-                },
+                },*/
                 {
                     "kind": "block",
                     "type": "get_all_cat"
                 },
-                {
+                /*{
                     "kind": "block",
                     "type": "get_all_enemy"
-                },
+                },*/
             ]
         },
-        {
+        /*{
             "kind": "category",
             "name": "敵人",
             "colour": "240",
@@ -982,7 +990,7 @@ export default {
             "contents": [
 
             ]
-        },
+        },*/
         {
             "kind": "category",
             "name": "輸出",
@@ -999,6 +1007,10 @@ export default {
                 {
                     "kind": "block",
                     "type": "output_csv"
+                },
+                {
+                    "kind": "block",
+                    "type": "output_tsv"
                 },
                 {
                     "kind": "block",

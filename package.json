@@ -9,7 +9,6 @@
   "license": "ISC",
   "dependencies": {
     "blockly": "^10.2.2",
-    "chart.js": "^4.4.0",
     "terser-webpack-plugin": "^5.3.9"
   },
   "devDependencies": {
