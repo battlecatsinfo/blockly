@@ -334,7 +334,7 @@ class App {
                     .setCheck("Cat")
                     .appendField("綁定貓咪");
                 this.appendDummyInput()
-                    .appendField(new Blockly.FieldDropdown([["第一型態", "0"], ["第二型態", "1"], ["第三型態", "2"], ["第四型態", "3"], ["最高型態", "-1"]]), "d");
+                    .appendField(new Blockly.FieldDropdown([["第一形態", "0"], ["第二形態", "1"], ["第三形態", "2"], ["第四形態", "3"], ["最高形態", "-1"]]), "d");
                 this.appendValueInput('base')
                     .appendField('基本等級')
                     .setCheck('Number');
@@ -653,9 +653,9 @@ class App {
             init: function () {
                 this.appendDummyInput()
                     .appendField(new Blockly.FieldDropdown([
-                        ['開放第二型態', '2'],
-                        ['開放第三型態', '3'],
-                        ['開放第四型態', '4'],
+                        ['開放第二形態', '2'],
+                        ['開放第三形態', '3'],
+                        ['開放第四形態', '4'],
                         ['開放本能', 'talent'],
                         ['開放超本能', 'super'],
                     ]), "d");
@@ -667,7 +667,7 @@ class App {
         Blockly.Blocks['cat_form_length'] = {
             init: function () {
                 this.appendDummyInput()
-                    .appendField("貓咪的型態數");
+                    .appendField("貓咪的形態數");
                 this.setInputsInline(false);
                 this.setColour(230);
                 this.setOutput(true, 'Array');
